@@ -101,11 +101,47 @@ module.exports = function(app, db) {
   app
     .route("/api/replies/:board")
 
+  //I can GET an entire thread with all it's replies from /api/replies/{board}?thread_id={thread_id}. 
+  //Also hiding the same fields.
     .get((req, res) => {})
 
-    .post((req, res) => {})
+  //I can POST a reply to a thead on a specific board by passing form data text, delete_password, & thread_id 
+  //to /api/replies/{board} and it will also update the bumped_on date to the comments date.
+  //(Recomend res.redirect to thread page /b/{board}/{thread_id}) In the thread's 'replies' array will be saved 
+  //_id, text, created_on, delete_password, & reported.
+    .post((req, res) => {
+      var board = req.params.board;
+      var now = new Date();
+      db.collection(board).findOneAndUpdate( 
+        {_id: req.body.thread_id}, 
+        { 
+          $push: {
+            replies: {
+              _id: shortid.generate(),
+              text: req.body.text,
+              created_on: now,
+              reported: false,
+              delete_password: req.body.delete_password,
+            } 
+          },
+          $set: {
+            bumped_on: now
+          },
+          $inc: {
+            replycount: 1
+          }
+        },
+        {returnOriginal: false}, (err, doc) => {
+          if(err) res.send("Error creating reply");
+          else res.redirect("/b/" + board + "/" + req.body.thread_id);
+        });
+    })
 
+  //I can report a reply and change it's reported value to true by sending a PUT request to /api/replies/{board} 
+  //and pass along the thread_id & reply_id. (Text response will be 'success')
     .put((req, res) => {})
 
+  //I can delete a post(just changing the text to '[deleted]') if I send a DELETE request to /api/replies/{board} 
+  //and pass along the thread_id, reply_id, & delete_password. (Text response will be 'incorrect password' or 'success')
     .delete((req, res) => {});
 };
