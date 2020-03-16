@@ -33,17 +33,23 @@ module.exports = function(app, db) {
           else {
             var replies;
             list.forEach(thread => {
-              replies = [];
-              var replyCount =
-                thread.replies.length > 3 ? 3 : thread.replies.length;
-              for (var i = 0; i < replyCount; i++) {
-                replies.push({
-                  _id: thread.replies[i]._id,
-                  text: thread.replies[i].text,
-                  created_on: thread.replies[i].created_on
-                });
+              if (thread.replies.length !== 0) {
+                replies = [];
+                var replyCount =
+                  thread.replies.length > 3 ? 3 : thread.replies.length;
+                for (
+                  var i = thread.replies.length - 1;
+                  i > thread.replies.length - 1 - replyCount;
+                  i--
+                ) {
+                  replies.push({
+                    _id: thread.replies[i]._id,
+                    text: thread.replies[i].text,
+                    created_on: thread.replies[i].created_on
+                  });
+                }
+                thread.replies = replies;
               }
-              thread.replies = replies;
             });
             res.send(list);
           }
