@@ -42,11 +42,7 @@ module.exports = function(app, db) {
                   i > thread.replies.length - 1 - replyCount;
                   i--
                 ) {
-                  replies.push({
-                    _id: thread.replies[i]._id,
-                    text: thread.replies[i].text,
-                    created_on: thread.replies[i].created_on
-                  });
+                  replies.push(sanitizeReply(thread.replies[i]));
                 }
                 thread.replies = replies;
               }
@@ -124,7 +120,20 @@ module.exports = function(app, db) {
 
     //I can GET an entire thread with all it's replies from /api/replies/{board}?thread_id={thread_id}.
     //Also hiding the same fields.
-    .get((req, res) => {})
+    .get((req, res) => {
+      var board = req.params.board;
+      db.collection(board).findOne({ _id: req.query.thread_id }, (err, doc) => {
+        if (err) console.log(err);
+        else {
+          var replies = [];
+          doc.replies.slice().reverse().forEach( rep => {
+            replies.push(sanitizeReply(rep));
+          })
+          doc.replies = replies;
+          res.send(doc);
+        }
+      });
+    })
 
     //I can POST a reply to a thead on a specific board by passing form data text, delete_password, & thread_id
     //to /api/replies/{board} and it will also update the bumped_on date to the comments date.
@@ -167,4 +176,13 @@ module.exports = function(app, db) {
     //I can delete a post(just changing the text to '[deleted]') if I send a DELETE request to /api/replies/{board}
     //and pass along the thread_id, reply_id, & delete_password. (Text response will be 'incorrect password' or 'success')
     .delete((req, res) => {});
+
+  //helper function to remove 'reported' and 'delete_password' elements from a reply object
+  const sanitizeReply = function(reply) {
+    return {
+      _id: reply._id,
+      text: reply.text,
+      created_on: reply.created_on
+    };
+  };
 };
