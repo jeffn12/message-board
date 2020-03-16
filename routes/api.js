@@ -50,7 +50,8 @@ module.exports = function(app, db) {
           bumped_on: now,
           reported: false,
           delete_password: req.body.delete_password,
-          replies: []
+          replies: [],
+          replycount: 0
         },
         (err, thread) => {
           if (err) {
