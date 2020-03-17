@@ -60,7 +60,7 @@ module.exports = function(app, db) {
       var board = req.params.board;
       db.collection(board).insertOne(
         {
-          _id: shortid.generate(),
+          _id: req.body._id || shortid.generate(),
           text: req.body.text,
           created_on: now,
           bumped_on: now,
@@ -131,7 +131,6 @@ module.exports = function(app, db) {
         .toArray((err, doc) => {
           if (err) console.log(err);
           else {
-            console.log(doc);
             var replies = [];
             doc[0].replies
               .slice()
@@ -157,7 +156,7 @@ module.exports = function(app, db) {
         {
           $push: {
             replies: {
-              _id: shortid.generate(),
+              _id: req.body._id || shortid.generate(),
               text: req.body.text,
               created_on: now,
               reported: false,
